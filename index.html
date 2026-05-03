@@ -45,6 +45,7 @@
             opacity: 0;
             transition: opacity 0.4s ease-in-out;
             transform-origin: 0 0;
+            pointer-events: auto;
         }
 
         #diagram-img.loaded {
@@ -205,7 +206,7 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">CLIENTES-APELLIDOS</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idCliente</span>, apellido)<br>
+                    (<span class="pk">idCliente</span>, <span class="pk">apellido</span>)<br>
                     <span class="fk text-xs">idCliente: FK de CLIENTES</span>
                 </p>
             </div>
@@ -213,13 +214,13 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">CLIENTES-NOMBRES</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idCliente</span>, nombre)<br>
+                    (<span class="pk">idCliente</span>, <span class="pk">nombre</span>)<br>
                     <span class="fk text-xs">idCliente: FK de CLIENTES</span>
                 </p>
             </div>
 
             <!-- TURNOS -->
-            <div class="table-card border-l-4 border-l-blue-500">
+            <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">TURNOS</h3>
                 <p class="text-sm leading-relaxed">
                     (<span class="pk">idTurno</span>, estadoTurno, fecha, hora, <span class="fk">idCliente*</span>)<br>
@@ -247,7 +248,7 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS-APELLIDOS</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idEmpleado</span>, apellido)<br>
+                    (<span class="pk">idEmpleado</span>, <span class="pk">apellido</span>)<br>
                     <span class="fk text-xs">idEmpleado : FK de EMPLEADOS</span>
                 </p>
             </div>
@@ -255,7 +256,7 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS-NOMBRES</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idEmpleado</span>, nombre)<br>
+                    (<span class="pk">idEmpleado</span>, <span class="pk">nombre</span>)<br>
                     <span class="fk text-xs">idEmpleado : FK de EMPLEADOS</span>
                 </p>
             </div>
@@ -338,7 +339,7 @@
             </div>
 
             <!-- HISTORIAL -->
-            <div class="table-card border-l-4 border-l-orange-500">
+            <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">HISTORIAL-CAPILAR</h3>
                 <p class="text-sm leading-relaxed">
                     (<span class="pk">idCliente</span>, tipoRostro, tipoCabello, densidad, <span class="fk">idEmpleado</span>)<br>
@@ -386,8 +387,8 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">ALERGIAS / RECOMENDACIONES</h3>
                 <p class="text-sm leading-relaxed">
-                    • <b>ALERGIAS</b> (<span class="pk">idCliente</span>, alergia)<br>
-                    • <b>RECOMENDACIONES</b> (<span class="pk">idCliente</span>, recomendaciones)<br>
+                    • <b>ALERGIAS</b> (<span class="pk">idCliente</span>, <span class="pk">alergia</span>)<br>
+                    • <b>RECOMENDACIONES</b> (<span class="pk">idCliente</span>, <span class="pk">recomendaciones</span>)<br>
                     <span class="fk text-xs">idCliente: FK de CLIENTES</span>
                 </p>
             </div>
@@ -467,9 +468,14 @@
             applyTransform();
         }
 
+        // Listener de rueda actualizado para permitir el scroll de página fuera de la imagen
         container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            handleZoom(-e.deltaY, e.clientX, e.clientY);
+            if (e.target === img) {
+                // Si el puntero está exactamente sobre la imagen, hacemos zoom
+                e.preventDefault();
+                handleZoom(-e.deltaY, e.clientX, e.clientY);
+            }
+            // De lo contrario, no llamamos a preventDefault y la página scrollea normal
         }, { passive: false });
 
         container.addEventListener('mousedown', (e) => {
