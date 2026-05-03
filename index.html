@@ -113,8 +113,8 @@
             border-left: 4px solid #3b82f6;
         }
 
-        /* Sección Modelo Relacional */
-        .relational-section {
+        /* Secciones de Contenido */
+        .content-section {
             padding: 4rem 2rem;
             max-width: 1200px;
             margin: 0 auto;
@@ -122,8 +122,8 @@
             background-color: rgba(15, 23, 42, 0.6); /* Capa base para legibilidad */
         }
 
-        .table-card {
-            background: rgba(30, 41, 59, 0.85); /* Más opaco para evitar distracciones */
+        .table-card, .info-card {
+            background: rgba(30, 41, 59, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 1.5rem;
@@ -131,7 +131,7 @@
             backdrop-filter: blur(6px);
         }
 
-        .table-card:hover {
+        .table-card:hover, .info-card:hover {
             border-color: #3b82f6;
             background: rgba(30, 41, 59, 0.95);
             transform: translateY(-5px);
@@ -165,7 +165,7 @@
 </head>
 <body>
 
-    <!-- FONDO ANIMADO DE PARTÍCULAS (MAYOR INTENSIDAD) -->
+    <!-- FONDO ANIMADO DE PARTÍCULAS -->
     <canvas id="particle-canvas"></canvas>
 
     <!-- SECCIÓN 1: DIAGRAMA ER -->
@@ -207,7 +207,7 @@
     </section>
 
     <!-- SECCIÓN 2: MODELO RELACIONAL -->
-    <section id="relational-model" class="relational-section">
+    <section id="relational-model" class="content-section">
         <div class="mb-12 text-center">
             <h2 class="text-4xl font-extrabold text-white mb-2">Modelo Relacional</h2>
             <div class="h-1 w-24 bg-blue-500 mx-auto rounded-full"></div>
@@ -380,7 +380,7 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">DETALLE-FACTURA</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idFactura</span>, nombreItem, cantidad, precioUnitario)<br>
+                    (<span class="pk">idTurno</span>, <span class="pk">idFactura</span>, nombreItem, cantidad, precioUnitario)<br>
                     <span class="fk text-xs">IdTurno: FK de TURNOS</span><br>
                     <span class="fk text-xs">idFactura: FK de FACTURAS</span>
                 </p>
@@ -423,6 +423,20 @@
             </div>
 
         </div>
+    </section>
+
+    <!-- SECCIÓN 3: NORMALIZACIÓN -->
+    <section id="normalization" class="content-section border-t border-white/5">
+        <div class="mb-12 text-center">
+            <h2 class="text-4xl font-extrabold text-white mb-2">Normalización</h2>
+            <div class="h-1 w-24 bg-blue-500 mx-auto rounded-full"></div>
+        </div>
+
+        <div class="info-card max-w-3xl mx-auto text-center border-l-4 border-blue-500">
+            <p class="text-lg text-slate-200 leading-relaxed">
+                Las tablas del modelo relacional ya se encuentran en <span class="text-blue-400 font-bold">1ra Forma Normal (1FN)</span> ya que no hay atributos multivalorados en las mismas.
+            </p>
+        </div>
 
         <footer class="mt-20 text-center text-slate-500 text-xs pb-8">
             © 2026 Sistema de Gestión de Peluquería - Modelo Relacional Normalizado
@@ -447,10 +461,10 @@
             reset() {
                 this.x = Math.random() * pCanvas.width;
                 this.y = Math.random() * pCanvas.height;
-                this.size = Math.random() * 2.5 + 1.2; // Partículas ligeramente más grandes
-                this.speedX = (Math.random() - 0.5) * 0.7; // Un poco más rápidas
+                this.size = Math.random() * 2.5 + 1.2; 
+                this.speedX = (Math.random() - 0.5) * 0.7; 
                 this.speedY = (Math.random() - 0.5) * 0.7;
-                this.alpha = Math.random() * 0.5 + 0.2; // Más brillantes
+                this.alpha = Math.random() * 0.5 + 0.2; 
             }
             update() {
                 this.x += this.speedX;
@@ -461,7 +475,7 @@
             }
             draw() {
                 pCtx.fillStyle = `rgba(148, 163, 184, ${this.alpha})`;
-                pCtx.shadowBlur = 4; // Brillo sutil
+                pCtx.shadowBlur = 4; 
                 pCtx.shadowColor = "rgba(148, 163, 184, 0.5)";
                 pCtx.beginPath();
                 pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -471,7 +485,6 @@
 
         function initParticles() {
             particles = [];
-            // Mayor cantidad de partículas
             const count = Math.min(180, Math.floor((window.innerWidth * window.innerHeight) / 10000));
             for (let i = 0; i < count; i++) {
                 particles.push(new Particle());
