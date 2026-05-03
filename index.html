@@ -94,7 +94,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Indicador de carga */
         #loader {
             position: fixed;
             top: 50%;
@@ -132,7 +131,7 @@
     <div id="viewer-container">
         <img 
             id="diagram-img" 
-            src="./WhatsApp Image 2026-05-03 at 13.10.22.jpeg" 
+            src="WhatsApp Image 2026-05-03 at 13.10.22.jpeg" 
             alt="Diagrama Entidad Relación"
             onload="onImageLoad()"
             onerror="onImageError()"
@@ -171,7 +170,7 @@
         function onImageError() {
             loader.innerHTML = `
                 <p class="text-red-400 font-medium">Error al cargar la imagen</p>
-                <p class="text-xs text-slate-500 mt-2">Asegúrate de que el archivo se llame "ER-Grupo.drawio.jpg"</p>
+                <p class="text-xs text-slate-500 mt-2">Verifica el nombre del archivo en la carpeta.</p>
             `;
         }
 
@@ -180,7 +179,6 @@
         }
 
         function resetView() {
-            // Escala inicial inteligente basada en el tamaño del contenedor
             const containerAspect = container.clientWidth / container.clientHeight;
             const imgAspect = img.naturalWidth / img.naturalHeight;
             
@@ -201,7 +199,6 @@
             updateTransform();
         }
 
-        // --- Eventos de Ratón ---
         container.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX - translateX;
@@ -219,7 +216,6 @@
             isDragging = false;
         });
 
-        // --- Rueda del Ratón ---
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
             const zoomSpeed = 0.001;
@@ -227,7 +223,6 @@
             adjustZoom(factor);
         }, { passive: false });
 
-        // --- Soporte Táctil ---
         let initialDist = 0;
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
@@ -262,7 +257,6 @@
         container.addEventListener('touchend', () => {
             isDragging = false;
         });
-
     </script>
 </body>
 </html>
