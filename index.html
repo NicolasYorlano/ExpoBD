@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Diagrama Entidad-Relación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #viewer-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            overflow: hidden;
+            touch-action: none;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        #viewer-container:active {
+            cursor: grabbing;
+        }
+
+        #diagram-img {
+            max-width: none;
+            display: block;
+            will-change: transform;
+            transition: transform 0.05s linear;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #diagram-img.loaded {
+            opacity: 1;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.75rem;
+            border-radius: 9999px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 100;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-control:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .header-info {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 100;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Indicador de carga */
+        #loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p class="text-sm text-slate-400">Cargando diagrama...</p>
+    </div>
+
+    <div class="header-info">
+        <h1 class="text-lg font-bold text-white/90">Diagrama ER</h1>
+        <p class="text-xs text-blue-400 uppercase tracking-widest font-semibold">Grupo de Trabajo</p>
+    </div>
+
+    <div id="viewer-container">
+        <img 
+            id="diagram-img" 
+            src="./WhatsApp Image 2026-05-03 at 13.10.22.jpeg" 
+            alt="Diagrama Entidad Relación"
+            onload="onImageLoad()"
+            onerror="onImageError()"
+        >
+    </div>
+
+    <div class="controls">
+        <button class="btn-control" onclick="adjustZoom(1.2)" title="Acercar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <button class="btn-control" onclick="resetView()" title="Centrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+        <button class="btn-control" onclick="adjustZoom(0.8)" title="Alejar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+    </div>
+
+    <script>
+        const container = document.getElementById('viewer-container');
+        const img = document.getElementById('diagram-img');
+        const loader = document.getElementById('loader');
+
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        function onImageLoad() {
+            loader.style.display = 'none';
+            img.classList.add('loaded');
+            resetView();
+        }
+
+        function onImageError() {
+            loader.innerHTML = `
+                <p class="text-red-400 font-medium">Error al cargar la imagen</p>
+                <p class="text-xs text-slate-500 mt-2">Asegúrate de que el archivo se llame "ER-Grupo.drawio.jpg"</p>
+            `;
+        }
+
+        function updateTransform() {
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        }
+
+        function resetView() {
+            // Escala inicial inteligente basada en el tamaño del contenedor
+            const containerAspect = container.clientWidth / container.clientHeight;
+            const imgAspect = img.naturalWidth / img.naturalHeight;
+            
+            if (imgAspect > containerAspect) {
+                scale = (container.clientWidth * 0.9) / img.naturalWidth;
+            } else {
+                scale = (container.clientHeight * 0.9) / img.naturalHeight;
+            }
+            
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        function adjustZoom(factor) {
+            scale *= factor;
+            scale = Math.min(Math.max(scale, 0.1), 10);
+            updateTransform();
+        }
+
+        // --- Eventos de Ratón ---
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // --- Rueda del Ratón ---
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.001;
+            const factor = Math.exp(-e.deltaY * zoomSpeed);
+            adjustZoom(factor);
+        }, { passive: false });
+
+        // --- Soporte Táctil ---
+        let initialDist = 0;
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            } else if (e.touches.length === 2) {
+                initialDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isDragging) {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                updateTransform();
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const factor = dist / initialDist;
+                scale *= factor;
+                initialDist = dist;
+                updateTransform();
+            }
+        });
+
+        container.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+    </script>
+</body>
+</html>
