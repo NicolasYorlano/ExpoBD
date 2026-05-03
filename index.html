@@ -388,9 +388,17 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">DETALLE-FACTURA</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idTurno</span>, <span class="pk">idFactura</span>, nombreItem, cantidad, precioUnitario)<br>
+                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, <span class="fk">nombreItem</span>)<br>
                     <span class="fk text-xs">IdTurno: FK de TURNOS</span><br>
-                    <span class="fk text-xs">idFactura: FK de FACTURAS</span>
+                    <span class="fk text-xs">idFactura: FK de FACTURAS</span><br>
+                    <span class="fk text-xs">nombreItem: FK de DETALLE-POR-ITEM</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">DETALLE-POR-ITEM</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">nombreItem</span>, precioUnitario, cantidad)
                 </p>
             </div>
 
@@ -460,6 +468,7 @@
                     </div>
 
                     <div class="flex items-center gap-2 text-rose-400 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
                         <span>idFactura → metodoDePago (Dependencia Parcial detectada)</span>
                     </div>
 
@@ -470,7 +479,7 @@
                             <h5 class="text-emerald-400 font-bold text-xs mb-1">DATOS_FACTURAS</h5>
                             <p class="font-mono text-xs underline">idFactura</p>
                             <p class="font-mono text-xs">metodoDePago</p>
-                            <p class="text-[10px] text-emerald-400 italic mt-1">idFactura: FK de FACTURAS</p>
+                            <p class="text-[10px] text-emerald-400 italic mt-1 font-bold">idFactura: FK de FACTURAS</p>
                         </div>
                         <div class="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
                             <h5 class="text-emerald-400 font-bold text-xs mb-1">FACTURAS</h5>
@@ -481,6 +490,45 @@
                     </div>
 
                     <p class="text-slate-400 italic">No se identifica ninguna otra dependencia parcial.</p>
+                </div>
+            </div>
+
+            <!-- 3FN -->
+            <div class="info-card border-l-4 border-indigo-500">
+                <h4 class="text-indigo-400 font-bold text-xl mb-4">3ra Forma Normal (3FN)</h4>
+                <div class="text-slate-300 space-y-4 text-sm md:text-base">
+                    <p>En esta forma buscaremos <b>atributos transitivos</b>.</p>
+                    
+                    <div class="bg-slate-900/50 p-4 rounded-lg font-mono text-xs md:text-sm">
+                        DETALLE-FACTURA(<span class="underline">idFactura</span>, nombreItem, cantidad, precioUnitario)
+                    </div>
+
+                    <p class="text-sm text-slate-400">Identificamos dependencias:</p>
+                    <div class="flex items-center gap-2 text-rose-400 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+                        <span>idFactura → nombreItem → precioUnitario, cantidad (Dependencia transitiva)</span>
+                    </div>
+
+                    <p>Armamos las siguientes tablas para resolver la transitividad:</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/30">
+                            <h5 class="text-indigo-400 font-bold text-xs mb-1">DETALLE-POR-ITEM</h5>
+                            <p class="font-mono text-xs underline">nombreItem</p>
+                            <p class="font-mono text-xs">precioUnitario, cantidad</p>
+                        </div>
+                        <div class="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/30">
+                            <h5 class="text-indigo-400 font-bold text-xs mb-1">DETALLE-FACTURA</h5>
+                            <p class="font-mono text-xs underline">idFactura</p>
+                            <p class="font-mono text-xs">nombreItem</p>
+                            <p class="text-[10px] text-indigo-400 italic mt-1">idFactura: FK de FACTURAS</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/10">
+                        <p class="text-indigo-300 font-bold">La BD ya está en 3ra Forma Normal.</p>
+                        <p class="text-slate-400 italic text-xs mt-1">No se identifica ningún otro atributo transitivo.</p>
+                    </div>
                 </div>
             </div>
         </div>
