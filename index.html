@@ -380,17 +380,10 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">DETALLE-FACTURA</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idFactura</span>, <span class="fk">nombreItem</span>)<br>
+                    (<span class="pk">idFactura</span>, <span class="fk">nombreItem</span>, precioUnitario, cantidad)<br>
                     <span class="fk text-xs">IdTurno: FK de TURNOS</span><br>
                     <span class="fk text-xs">idFactura: FK de FACTURAS</span><br>
                     <span class="fk text-xs">nombreItem: FK de DETALLE-POR-ITEM</span>
-                </p>
-            </div>
-
-            <div class="table-card">
-                <h3 class="text-blue-400 font-bold mb-3">DETALLE-POR-ITEM</h3>
-                <p class="text-sm leading-relaxed">
-                    (<span class="pk">nombreItem</span>, precioUnitario, cantidad)
                 </p>
             </div>
 
