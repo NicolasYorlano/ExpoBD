@@ -3,28 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Diagrama Entidad-Relación</title>
+    <title>Visualizador de Diagrama y Modelo Relacional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             background-color: #0f172a;
             color: #f8fafc;
-            overflow: hidden;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        /* Contenedor del Visor ER */
+        #viewer-section {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
 
         #viewer-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            height: 100%;
             cursor: grab;
-            overflow: hidden;
-            touch-action: none;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            position: relative;
         }
 
         #viewer-container:active {
@@ -32,14 +36,15 @@
         }
 
         #diagram-img {
+            position: absolute;
             max-width: none;
             display: block;
             will-change: transform;
-            transition: transform 0.05s linear;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            box-shadow: 0 0 70px rgba(0,0,0,0.6);
             border: 1px solid rgba(255,255,255,0.1);
             opacity: 0;
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.4s ease-in-out;
+            transform-origin: 0 0;
         }
 
         #diagram-img.loaded {
@@ -47,55 +52,79 @@
         }
 
         .controls {
-            position: fixed;
+            position: absolute;
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 0.75rem;
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             padding: 0.75rem;
             border-radius: 9999px;
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             z-index: 100;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
         .btn-control {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s;
         }
 
         .btn-control:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-3px);
+            border-color: #3b82f6;
         }
 
         .header-info {
-            position: fixed;
+            position: absolute;
             top: 1.5rem;
             left: 1.5rem;
             z-index: 100;
             pointer-events: none;
-            background: rgba(15, 23, 42, 0.4);
-            padding: 0.5rem 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 0.6rem 1.2rem;
             border-radius: 12px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
+            border-left: 4px solid #3b82f6;
         }
 
+        /* Sección Modelo Relacional */
+        .relational-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .table-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .table-card:hover {
+            border-color: #3b82f6;
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-5px);
+        }
+
+        .pk { text-decoration: underline; font-weight: bold; color: #fbbf24; }
+        .fk { color: #60a5fa; font-style: italic; }
+
         #loader {
-            position: fixed;
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -104,13 +133,13 @@
         }
 
         .spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #3b82f6;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #3b82f6;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+            margin: 0 auto 1.2rem;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -118,48 +147,280 @@
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p class="text-sm text-slate-400">Cargando diagrama...</p>
-    </div>
+    <!-- SECCIÓN 1: DIAGRAMA ER -->
+    <section id="viewer-section">
+        <div id="loader">
+            <div class="spinner"></div>
+            <p class="text-sm text-slate-300 font-medium">Cargando Diagrama ER...</p>
+        </div>
 
-    <div class="header-info">
-        <h1 class="text-lg font-bold text-white/90">Diagrama ER</h1>
-        <p class="text-xs text-blue-400 uppercase tracking-widest font-semibold">Grupo de Trabajo</p>
-    </div>
+        <div class="header-info">
+            <h1 class="text-lg font-bold text-white/95">Diagrama Entidad-Relación</h1>
+            <p class="text-[10px] text-blue-400 uppercase tracking-[0.2em] font-bold">Visualización Interactiva</p>
+        </div>
 
-    <div id="viewer-container">
-        <img 
-            id="diagram-img" 
-            src="WhatsApp Image 2026-05-03 at 13.10.22.jpeg" 
-            alt="Diagrama Entidad Relación"
-            onload="onImageLoad()"
-            onerror="onImageError()"
-        >
-    </div>
+        <div id="viewer-container">
+            <img 
+                id="diagram-img" 
+                src="WhatsApp Image 2026-05-03 at 13.10.22.jpeg" 
+                alt="Diagrama Entidad Relación"
+                onload="onImageLoad()"
+                onerror="onImageError()"
+            >
+        </div>
 
-    <div class="controls">
-        <button class="btn-control" onclick="adjustZoom(1.2)" title="Acercar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        </button>
-        <button class="btn-control" onclick="resetView()" title="Centrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
-        <button class="btn-control" onclick="adjustZoom(0.8)" title="Alejar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        </button>
-    </div>
+        <div class="controls">
+            <button class="btn-control" id="zoom-in" title="Acercar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button class="btn-control" id="reset-btn" title="Restablecer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="btn-control" id="zoom-out" title="Alejar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <a href="#relational-model" class="btn-control bg-blue-600/20" title="Bajar al Modelo Relacional">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 2: MODELO RELACIONAL -->
+    <section id="relational-model" class="relational-section">
+        <div class="mb-12 text-center">
+            <h2 class="text-4xl font-extrabold text-white mb-2">Modelo Relacional</h2>
+            <div class="h-1 w-24 bg-blue-500 mx-auto rounded-full"></div>
+            <p class="text-slate-400 mt-4">Estructura detallada de tablas y dependencias</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- CLIENTES -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">CLIENTES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idCliente</span>, teléfono, email)
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">CLIENTES-APELLIDOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idCliente</span>, apellido)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">CLIENTES-NOMBRES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idCliente</span>, nombre)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span>
+                </p>
+            </div>
+
+            <!-- TURNOS -->
+            <div class="table-card border-l-4 border-l-blue-500">
+                <h3 class="text-blue-400 font-bold mb-3">TURNOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idTurno</span>, estadoTurno, fecha, hora, <span class="fk">idCliente*</span>)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">TURNOS-EMPLEADOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idTurno</span>, <span class="pk">idEmpleado</span>)<br>
+                    <span class="fk text-xs">idTurno: FK de TURNOS</span><br>
+                    <span class="fk text-xs">idEmpleado: FK de EMPLEADOS</span>
+                </p>
+            </div>
+
+            <!-- EMPLEADOS -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idEmpleado</span>, sueldo, teléfono, email)
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS-APELLIDOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idEmpleado</span>, apellido)<br>
+                    <span class="fk text-xs">idEmpleado : FK de EMPLEADOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS-NOMBRES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idEmpleado</span>, nombre)<br>
+                    <span class="fk text-xs">idEmpleado : FK de EMPLEADOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">EMPLEADOS-ESPECIALIDADES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idEspecialidad</span>, <span class="pk">idEmpleado</span>)<br>
+                    <span class="fk text-xs">idEmpleado: FK de EMPLEADOS</span><br>
+                    <span class="fk text-xs">idEspecialidad: FK de ESPECIALIDADES</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">ESPECIALIDADES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">IdEspecialidad</span>, nombre)
+                </p>
+            </div>
+
+            <!-- SERVICIOS -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">SERVICIOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idServicio</span>, precio, duraciónEstimada)
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">TRATAMIENTOS-CAPILARES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">IdServicio</span>, IdTratamiento)<br>
+                    <span class="fk text-xs">idServicio: FK de SERVICIOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">BARBA / CORTES / TINTURA</h3>
+                <p class="text-sm leading-relaxed">
+                    • <b>BARBA</b> (<span class="pk">IdServicio</span>, Idbarba)<br>
+                    • <b>CORTES-PELO</b> (<span class="pk">IdServicio</span>, IdCortedepelo)<br>
+                    • <b>TINTURA</b> (<span class="pk">IdServicio</span>, IdTintura)<br>
+                    <span class="fk text-xs">idServicio: FK de SERVICIOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">TURNOS-SERVICIOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idTurno</span>, <span class="pk">idServicio</span>)<br>
+                    <span class="fk text-xs">idTurno: FK de TURNOS</span><br>
+                    <span class="fk text-xs">idServicio: FK de SERVICIOS</span>
+                </p>
+            </div>
+
+            <!-- PRODUCTOS -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">PRODUCTOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idProducto</span>, stock, precio)
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">TURNOS-PRODUCTOS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idProducto</span>, <span class="pk">idTurno</span>, cantidad)<br>
+                    <span class="fk text-xs">idTurno: FK de TURNOS</span><br>
+                    <span class="fk text-xs">idProducto: FK de PRODUCTOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">PRODUCTOS-CAPILARES / CONSUMICIONES</h3>
+                <p class="text-sm leading-relaxed">
+                    • <b>CAPILARES</b> (<span class="pk">IdProducto</span>, IdProductoCapilar)<br>
+                    • <b>CONSUMICIONES</b> (<span class="pk">IdProducto</span>, IdConsumición)<br>
+                    <span class="fk text-xs">idProducto: FK de PRODUCTOS</span>
+                </p>
+            </div>
+
+            <!-- HISTORIAL -->
+            <div class="table-card border-l-4 border-l-orange-500">
+                <h3 class="text-blue-400 font-bold mb-3">HISTORIAL-CAPILAR</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idCliente</span>, tipoRostro, tipoCabello, densidad, <span class="fk">idEmpleado</span>)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span><br>
+                    <span class="fk text-xs">idEmpleado: FK de EMPLEADOS</span>
+                </p>
+            </div>
+
+            <!-- FACTURACIÓN -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">FACTURAS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, fechaEmision, metodoDePago, descuentoAplicado*, montoTotal)<br>
+                    <span class="fk text-xs">idTurno: FK de TURNOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">DETALLE-FACTURA</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idTurno</span>, <span class="pk">idFactura</span>, nombreItem, cantidad, precioUnitario)<br>
+                    <span class="fk text-xs">IdTurno: FK de TURNOS</span><br>
+                    <span class="fk text-xs">idFactura: FK de FACTURAS</span>
+                </p>
+            </div>
+
+            <!-- PROVEEDORES -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">PROVEEDORES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idProveedor</span>, nombre, email, teléfono)
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">PRODUCTOS-PROVEEDORES</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idProducto</span>, <span class="pk">idProveedor</span>, FechaEntrega)<br>
+                    <span class="fk text-xs">idProducto: FK de PRODUCTOS</span><br>
+                    <span class="fk text-xs">idProveedor: FK de PROVEEDORES</span>
+                </p>
+            </div>
+            
+            <!-- EXTRAS -->
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">ALERGIAS / RECOMENDACIONES</h3>
+                <p class="text-sm leading-relaxed">
+                    • <b>ALERGIAS</b> (<span class="pk">idCliente</span>, alergia)<br>
+                    • <b>RECOMENDACIONES</b> (<span class="pk">idCliente</span>, recomendaciones)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">PROMOCIONES</h3>
+                <p class="text-sm leading-relaxed">
+                    • <b>ASISTENCIAS</b> (<span class="pk">idCliente</span>, activa)<br>
+                    • <b>GASTOS</b> (<span class="pk">idCliente</span>, activa)<br>
+                    <span class="fk text-xs">idCliente: FK de CLIENTES</span>
+                </p>
+            </div>
+
+        </div>
+
+        <footer class="mt-20 text-center text-slate-500 text-xs">
+            © 2026 Sistema de Gestión de Peluquería - Modelo Relacional Normalizado
+        </footer>
+    </section>
 
     <script>
         const container = document.getElementById('viewer-container');
         const img = document.getElementById('diagram-img');
         const loader = document.getElementById('loader');
 
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
-        let isDragging = false;
-        let startX, startY;
+        let state = {
+            scale: 1,
+            x: 0,
+            y: 0,
+            isDragging: false,
+            lastMouseX: 0,
+            lastMouseY: 0
+        };
 
         function onImageLoad() {
             loader.style.display = 'none';
@@ -168,95 +429,71 @@
         }
 
         function onImageError() {
-            loader.innerHTML = `
-                <p class="text-red-400 font-medium">Error al cargar la imagen</p>
-                <p class="text-xs text-slate-500 mt-2">Verifica el nombre del archivo en la carpeta.</p>
-            `;
+            loader.innerHTML = `<p class="text-red-400">Error: Imagen no encontrada</p>`;
         }
 
-        function updateTransform() {
-            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        function applyTransform() {
+            img.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
         }
 
         function resetView() {
-            const containerAspect = container.clientWidth / container.clientHeight;
-            const imgAspect = img.naturalWidth / img.naturalHeight;
-            
-            if (imgAspect > containerAspect) {
-                scale = (container.clientWidth * 0.9) / img.naturalWidth;
-            } else {
-                scale = (container.clientHeight * 0.9) / img.naturalHeight;
-            }
-            
-            translateX = 0;
-            translateY = 0;
-            updateTransform();
+            const containerW = container.clientWidth;
+            const containerH = container.clientHeight;
+            if(!img.naturalWidth) return;
+
+            const scaleX = (containerW * 0.85) / img.naturalWidth;
+            const scaleY = (containerH * 0.85) / img.naturalHeight;
+            state.scale = Math.min(scaleX, scaleY, 1);
+
+            state.x = (containerW - img.naturalWidth * state.scale) / 2;
+            state.y = (containerH - img.naturalHeight * state.scale) / 2;
+            applyTransform();
         }
 
-        function adjustZoom(factor) {
-            scale *= factor;
-            scale = Math.min(Math.max(scale, 0.1), 10);
-            updateTransform();
+        function handleZoom(delta, mouseX, mouseY) {
+            const factor = Math.exp(delta * 0.0015);
+            const newScale = Math.min(Math.max(state.scale * factor, 0.05), 10);
+            
+            const rect = container.getBoundingClientRect();
+            const mX = mouseX - rect.left;
+            const mY = mouseY - rect.top;
+
+            const mouseRelativeX = (mX - state.x) / state.scale;
+            const mouseRelativeY = (mY - state.y) / state.scale;
+
+            state.x = mX - mouseRelativeX * newScale;
+            state.y = mY - mouseRelativeY * newScale;
+            state.scale = newScale;
+            applyTransform();
         }
-
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX - translateX;
-            startY = e.clientY - translateY;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            translateX = e.clientX - startX;
-            translateY = e.clientY - startY;
-            updateTransform();
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
 
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSpeed = 0.001;
-            const factor = Math.exp(-e.deltaY * zoomSpeed);
-            adjustZoom(factor);
+            handleZoom(-e.deltaY, e.clientX, e.clientY);
         }, { passive: false });
 
-        let initialDist = 0;
-        container.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].clientX - translateX;
-                startY = e.touches[0].clientY - translateY;
-            } else if (e.touches.length === 2) {
-                initialDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-            }
+        container.addEventListener('mousedown', (e) => {
+            state.isDragging = true;
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
         });
 
-        container.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 1 && isDragging) {
-                translateX = e.touches[0].clientX - startX;
-                translateY = e.touches[0].clientY - startY;
-                updateTransform();
-            } else if (e.touches.length === 2) {
-                const dist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                const factor = dist / initialDist;
-                scale *= factor;
-                initialDist = dist;
-                updateTransform();
-            }
+        window.addEventListener('mousemove', (e) => {
+            if (!state.isDragging) return;
+            state.x += (e.clientX - state.lastMouseX);
+            state.y += (e.clientY - state.lastMouseY);
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
+            applyTransform();
         });
 
-        container.addEventListener('touchend', () => {
-            isDragging = false;
-        });
+        window.addEventListener('mouseup', () => state.isDragging = false);
+
+        document.getElementById('zoom-in').onclick = () => handleZoom(300, window.innerWidth/2, window.innerHeight/2);
+        document.getElementById('zoom-out').onclick = () => handleZoom(-300, window.innerWidth/2, window.innerHeight/2);
+        document.getElementById('reset-btn').onclick = resetView;
+
+        window.addEventListener('resize', resetView);
     </script>
 </body>
 </html>
