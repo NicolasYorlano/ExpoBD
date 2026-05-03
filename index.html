@@ -372,16 +372,8 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">FACTURAS</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, fechaEmision, montoTotal, descuentoAplicado*)<br>
+                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, fechaEmision, montoTotal, metodosDePago descuentoAplicado*)<br>
                     <span class="fk text-xs">idTurno: FK de TURNOS</span>
-                </p>
-            </div>
-
-            <div class="table-card">
-                <h3 class="text-blue-400 font-bold mb-3">DATOS_FACTURAS</h3>
-                <p class="text-sm leading-relaxed">
-                    (<span class="pk">idFactura</span>, metodoDePago)<br>
-                    <span class="fk text-xs">idFactura: FK de FACTURAS</span>
                 </p>
             </div>
 
