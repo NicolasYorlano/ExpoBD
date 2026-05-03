@@ -15,13 +15,25 @@
             scroll-behavior: smooth;
         }
 
+        /* Lienzo de partículas de fondo */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
         /* Contenedor del Visor ER */
         #viewer-section {
             width: 100vw;
             height: 100vh;
             position: relative;
             overflow: hidden;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            /* Fondo con opacidad controlada para ver profundidad */
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
         }
 
         #viewer-container {
@@ -40,12 +52,13 @@
             max-width: none;
             display: block;
             will-change: transform;
-            box-shadow: 0 0 70px rgba(0,0,0,0.6);
+            box-shadow: 0 0 70px rgba(0,0,0,0.8);
             border: 1px solid rgba(255,255,255,0.1);
             opacity: 0;
             transition: opacity 0.4s ease-in-out;
             transform-origin: 0 0;
             pointer-events: auto;
+            background-color: #1e293b; /* Fondo sólido para que las partículas no se vean "dentro" del diagrama */
         }
 
         #diagram-img.loaded {
@@ -59,7 +72,7 @@
             transform: translateX(-50%);
             display: flex;
             gap: 0.75rem;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             padding: 0.75rem;
             border-radius: 9999px;
             backdrop-filter: blur(12px);
@@ -82,7 +95,7 @@
         }
 
         .btn-control:hover {
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.3);
             transform: translateY(-3px);
             border-color: #3b82f6;
         }
@@ -93,7 +106,7 @@
             left: 1.5rem;
             z-index: 100;
             pointer-events: none;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.7);
             padding: 0.6rem 1.2rem;
             border-radius: 12px;
             backdrop-filter: blur(8px);
@@ -105,20 +118,24 @@
             padding: 4rem 2rem;
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            background-color: rgba(15, 23, 42, 0.6); /* Capa base para legibilidad */
         }
 
         .table-card {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(30, 41, 59, 0.85); /* Más opaco para evitar distracciones */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 1.5rem;
             transition: all 0.3s ease;
+            backdrop-filter: blur(6px);
         }
 
         .table-card:hover {
             border-color: #3b82f6;
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.95);
             transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
 
         .pk { text-decoration: underline; font-weight: bold; color: #fbbf24; }
@@ -147,6 +164,9 @@
     </style>
 </head>
 <body>
+
+    <!-- FONDO ANIMADO DE PARTÍCULAS (MAYOR INTENSIDAD) -->
+    <canvas id="particle-canvas"></canvas>
 
     <!-- SECCIÓN 1: DIAGRAMA ER -->
     <section id="viewer-section">
@@ -404,12 +424,80 @@
 
         </div>
 
-        <footer class="mt-20 text-center text-slate-500 text-xs">
+        <footer class="mt-20 text-center text-slate-500 text-xs pb-8">
             © 2026 Sistema de Gestión de Peluquería - Modelo Relacional Normalizado
         </footer>
     </section>
 
     <script>
+        // --- SISTEMA DE PARTÍCULAS (INTENSIDAD MEJORADA) ---
+        const pCanvas = document.getElementById('particle-canvas');
+        const pCtx = pCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeParticles() {
+            pCanvas.width = window.innerWidth;
+            pCanvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * pCanvas.width;
+                this.y = Math.random() * pCanvas.height;
+                this.size = Math.random() * 2.5 + 1.2; // Partículas ligeramente más grandes
+                this.speedX = (Math.random() - 0.5) * 0.7; // Un poco más rápidas
+                this.speedY = (Math.random() - 0.5) * 0.7;
+                this.alpha = Math.random() * 0.5 + 0.2; // Más brillantes
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > pCanvas.width || this.y < 0 || this.y > pCanvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                pCtx.fillStyle = `rgba(148, 163, 184, ${this.alpha})`;
+                pCtx.shadowBlur = 4; // Brillo sutil
+                pCtx.shadowColor = "rgba(148, 163, 184, 0.5)";
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            // Mayor cantidad de partículas
+            const count = Math.min(180, Math.floor((window.innerWidth * window.innerHeight) / 10000));
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            resizeParticles();
+            initParticles();
+        });
+
+        resizeParticles();
+        initParticles();
+        animateParticles();
+
+
+        // --- LÓGICA DEL VISOR ---
         const container = document.getElementById('viewer-container');
         const img = document.getElementById('diagram-img');
         const loader = document.getElementById('loader');
@@ -468,14 +556,11 @@
             applyTransform();
         }
 
-        // Listener de rueda actualizado para permitir el scroll de página fuera de la imagen
         container.addEventListener('wheel', (e) => {
             if (e.target === img) {
-                // Si el puntero está exactamente sobre la imagen, hacemos zoom
                 e.preventDefault();
                 handleZoom(-e.deltaY, e.clientX, e.clientY);
             }
-            // De lo contrario, no llamamos a preventDefault y la página scrollea normal
         }, { passive: false });
 
         container.addEventListener('mousedown', (e) => {
