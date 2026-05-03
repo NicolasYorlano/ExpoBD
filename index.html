@@ -519,13 +519,7 @@
 
     <!-- SECCIÓN 2: MODELO RELACIONAL -->
     <section id="relational-model" class="content-section">
-        <div class="mb-12 text-center">
-            <h2 class="text-4xl font-extrabold text-white mb-2">Finalmente así queda la BD</h2>
-            <div class="h-1 w-24 bg-blue-500 mx-auto rounded-full"></div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- CLIENTES -->
+        <!-- CLIENTES -->
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">CLIENTES</h3>
                 <p class="text-sm leading-relaxed">
@@ -682,17 +676,33 @@
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">FACTURAS</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, fechaEmision, montoTotal, metodosDePago, descuentoAplicado*)<br>
+                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, fechaEmision, montoTotal, descuentoAplicado*)<br>
                     <span class="fk text-xs">idTurno: FK de TURNOS</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">DATOS_FACTURAS</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">idFactura</span>, metodoDePago)<br>
+                    <span class="fk text-xs">idFactura: FK de FACTURAS</span>
                 </p>
             </div>
 
             <div class="table-card">
                 <h3 class="text-blue-400 font-bold mb-3">DETALLE-FACTURA</h3>
                 <p class="text-sm leading-relaxed">
-                    (<span class="pk">idFactura</span>, <span class="fk">nombreItem</span>, precioUnitario, cantidad)<br>
+                    (<span class="fk">idTurno</span>, <span class="pk">idFactura</span>, <span class="fk">nombreItem</span>)<br>
+                    <span class="fk text-xs">IdTurno: FK de TURNOS</span><br>
                     <span class="fk text-xs">idFactura: FK de FACTURAS</span><br>
                     <span class="fk text-xs">nombreItem: FK de DETALLE-POR-ITEM</span>
+                </p>
+            </div>
+
+            <div class="table-card">
+                <h3 class="text-blue-400 font-bold mb-3">DETALLE-POR-ITEM</h3>
+                <p class="text-sm leading-relaxed">
+                    (<span class="pk">nombreItem</span>, precioUnitario, cantidad)
                 </p>
             </div>
 
