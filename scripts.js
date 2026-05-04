@@ -88,6 +88,14 @@
             loader.innerHTML = `<p class="text-red-400">Error: Imagen no encontrada</p>`;
         }
 
+        img.addEventListener('load', onImageLoad);
+        img.addEventListener('error', onImageError);
+
+        if (img.complete) {
+            if (img.naturalWidth > 0) onImageLoad();
+            else onImageError();
+        }
+
         function applyTransform() {
             img.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
         }
@@ -130,7 +138,10 @@
             }
         }, { passive: false });
 
+        img.addEventListener('dragstart', (e) => e.preventDefault());
+
         container.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Solo click izquierdo
             state.isDragging = true;
             state.lastMouseX = e.clientX;
             state.lastMouseY = e.clientY;
@@ -147,8 +158,42 @@
 
         window.addEventListener('mouseup', () => state.isDragging = false);
 
-        document.getElementById('zoom-in').onclick = () => handleZoom(300, window.innerWidth/2, window.innerHeight/2);
-        document.getElementById('zoom-out').onclick = () => handleZoom(-300, window.innerWidth/2, window.innerHeight/2);
+        // Soporte para táctil (Móviles)
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                state.isDragging = true;
+                state.lastMouseX = e.touches[0].clientX;
+                state.lastMouseY = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchmove', (e) => {
+            if (!state.isDragging) return;
+            if (e.touches.length === 1) {
+                e.preventDefault(); // Evita que la página haga scroll al arrastrar
+                state.x += (e.touches[0].clientX - state.lastMouseX);
+                state.y += (e.touches[0].clientY - state.lastMouseY);
+                state.lastMouseX = e.touches[0].clientX;
+                state.lastMouseY = e.touches[0].clientY;
+                applyTransform();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => state.isDragging = false);
+
+        function getCenter() {
+            const rect = container.getBoundingClientRect();
+            return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        }
+
+        document.getElementById('zoom-in').onclick = () => {
+            const center = getCenter();
+            handleZoom(300, center.x, center.y);
+        };
+        document.getElementById('zoom-out').onclick = () => {
+            const center = getCenter();
+            handleZoom(-300, center.x, center.y);
+        };
         document.getElementById('reset-btn').onclick = resetView;
 
         window.addEventListener('resize', resetView);
