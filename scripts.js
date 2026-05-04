@@ -8,51 +8,60 @@
             pCanvas.height = window.innerHeight;
         }
 
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * pCanvas.width;
-                this.y = Math.random() * pCanvas.height;
-                this.size = Math.random() * 2.5 + 1.2; 
-                this.speedX = (Math.random() - 0.5) * 0.7; 
-                this.speedY = (Math.random() - 0.5) * 0.7;
-                this.alpha = Math.random() * 0.5 + 0.2; 
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x < 0 || this.x > pCanvas.width || this.y < 0 || this.y > pCanvas.height) {
-                    this.reset();
-                }
-            }
-            draw() {
-                pCtx.fillStyle = `rgba(148, 163, 184, ${this.alpha})`;
-                pCtx.shadowBlur = 4; 
-                pCtx.shadowColor = "rgba(148, 163, 184, 0.5)";
-                pCtx.beginPath();
-                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                pCtx.fill();
-            }
+class Particle {
+    constructor() {
+        this.reset();
+    }
+    reset() {
+        this.x = Math.random() * pCanvas.width;
+        this.y = Math.random() * pCanvas.height;
+        this.size = Math.random() * 2.8 + 1.2; 
+        this.speedX = (Math.random() - 0.5) * 0.8; 
+        this.speedY = (Math.random() - 0.5) * 0.8;
+        // Opacidad reducida para un efecto más elegante y menos invasivo
+        this.alpha = Math.random() * 0.25 + 0.05; 
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > pCanvas.width || this.y < 0 || this.y > pCanvas.height) {
+            this.reset();
         }
+    }
+    draw() {
+        // Mantenemos un brillo muy suave
+        pCtx.shadowBlur = 5;
+        pCtx.shadowColor = `rgba(148, 163, 184, ${this.alpha * 0.5})`;
+        
+        pCtx.fillStyle = `rgba(203, 213, 225, ${this.alpha})`;
+        pCtx.beginPath();
+        pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        pCtx.fill();
+    }
+}
 
-        function initParticles() {
-            particles = [];
-            const count = Math.min(180, Math.floor((window.innerWidth * window.innerHeight) / 10000));
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle());
-            }
-        }
+function initParticles() {
+    particles = [];
+    const densityFactor = 1800; 
+    const maxParticles = 1000; 
+    
+    const count = Math.min(maxParticles, Math.floor((window.innerWidth * window.innerHeight) / densityFactor));
+    
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle());
+    }
+}
 
-        function animateParticles() {
-            pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animateParticles);
-        }
+function animateParticles() {
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    
+    requestAnimationFrame(animateParticles);
+}
 
         window.addEventListener('resize', () => {
             resizeParticles();
